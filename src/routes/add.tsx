@@ -340,11 +340,17 @@ function AddBenefit() {
     <AppShell>
       <h1 className="font-display text-3xl font-bold">إضافة فائدة</h1>
       <div className="mt-4 flex flex-wrap gap-2 text-xs">
-        {[
-          [1, "الصورة والمصدر"],
-          [2, "استخراج النص"],
-          [3, "المراجعة والحفظ"],
-        ].map(([n, label]) => (
+        {(mode === "image"
+          ? [
+              [1, "الصورة والمصدر"],
+              [2, "استخراج النص"],
+              [3, "المراجعة والحفظ"],
+            ]
+          : [
+              [1, "الكتابة والمصدر"],
+              [2, "المراجعة والحفظ"],
+            ]
+        ).map(([n, label]) => (
           <span
             key={n as number}
             className={`rounded-full px-4 py-1.5 ${step === n ? "bg-foreground text-background" : "bg-muted text-muted-foreground"}`}
@@ -357,18 +363,47 @@ function AddBenefit() {
       {step === 1 && (
         <section className="mt-7 space-y-6 rounded-3xl border border-border bg-card p-7">
           <div>
-            <label className="mb-2 block text-sm">صور صفحات الكتاب</label>
-            <input type="file" accept="image/*" multiple onChange={(e) => pick(e.target.files)} className={inputClass} />
-            <div className="mt-3 flex flex-wrap items-center gap-3">
+            <label className="mb-2 block text-sm">طريقة الإدخال</label>
+            <div className="flex flex-wrap gap-2">
               <button
                 type="button"
-                onClick={openCamera}
-                className="rounded-full border border-border px-5 py-2.5 text-sm hover:bg-secondary"
+                onClick={() => setMode("image")}
+                className={`rounded-full px-5 py-2.5 text-sm ${mode === "image" ? "bg-foreground text-background" : "border border-border hover:bg-secondary"}`}
               >
-                📷 التقاط صورة بالكاميرا
+                🖼 صورة صفحة الكتاب
               </button>
-              <p className="text-xs text-muted-foreground">صور فقط، حتى ١٠ ميجابايت لكل صورة.</p>
+              <button
+                type="button"
+                onClick={() => setMode("manual")}
+                className={`rounded-full px-5 py-2.5 text-sm ${mode === "manual" ? "bg-foreground text-background" : "border border-border hover:bg-secondary"}`}
+              >
+                ✍️ كتابة يدوية
+              </button>
             </div>
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm">
+              {mode === "image" ? "صور صفحات الكتاب" : "صورة للمصدر (اختيارية)"}
+            </label>
+            {mode === "image" && (
+              <input type="file" accept="image/*" multiple onChange={(e) => pick(e.target.files)} className={inputClass} />
+            )}
+            {mode === "manual" && (
+              <input type="file" accept="image/*" onChange={(e) => pick(e.target.files)} className={inputClass} />
+            )}
+            {mode === "image" && (
+              <div className="mt-3 flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  onClick={openCamera}
+                  className="rounded-full border border-border px-5 py-2.5 text-sm hover:bg-secondary"
+                >
+                  📷 التقاط صورة بالكاميرا
+                </button>
+                <p className="text-xs text-muted-foreground">صور فقط، حتى ١٠ ميجابايت لكل صورة.</p>
+              </div>
+            )}
             {images.length > 0 && (
               <div className="mt-4 flex flex-wrap gap-3">
                 {images.map((img, i) => (
@@ -385,6 +420,23 @@ function AddBenefit() {
               </div>
             )}
           </div>
+
+          {mode === "manual" && (
+            <div>
+              <label className="mb-2 block text-sm">نص الفائدة (اكتبه أو الصقه كما هو)</label>
+              <textarea
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                rows={10}
+                placeholder="اكتب أو الصق نص الفائدة هنا…"
+                className={`${inputClass} quote-text leading-loose`}
+              />
+              <p className="mt-2 text-xs text-muted-foreground">
+                يُحفظ النص كما كتبته دون أي تعديل، وسيُقترح عليك عنوان وموضوعات بالذكاء الاصطناعي في خطوة المراجعة
+                (يمكنك تعديلها).
+              </p>
+            </div>
+          )}
 
           <div className="grid gap-4 sm:grid-cols-3">
             <div>
@@ -426,11 +478,17 @@ function AddBenefit() {
           </div>
 
           <button
-            onClick={extract}
+            onClick={mode === "image" ? extract : manualContinue}
             disabled={busy}
             className="rounded-full bg-primary px-7 py-3 text-sm font-medium text-primary-foreground disabled:opacity-60"
           >
-            {busy ? "جارٍ استخراج النص…" : "استخراج النص"}
+            {busy
+              ? mode === "image"
+                ? "جارٍ استخراج النص…"
+                : "جارٍ التحضير…"
+              : mode === "image"
+                ? "استخراج النص"
+                : "المتابعة إلى المراجعة"}
           </button>
         </section>
       )}
