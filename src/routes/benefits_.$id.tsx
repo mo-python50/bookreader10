@@ -14,7 +14,7 @@ import {
 } from "@/lib/library";
 import { useAuth } from "@/hooks/useAuth";
 
-export const Route = createFileRoute("/benefits/$id")({
+export const Route = createFileRoute("/benefits_/$id")({
   head: () => ({
     meta: [
       { title: "فائدة — جعبة الفوائد" },
