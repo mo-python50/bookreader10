@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
@@ -56,6 +56,70 @@ function AddBenefit() {
   const [makeCard, setMakeCard] = useState(false);
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState("");
+
+  const [cameraOpen, setCameraOpen] = useState(false);
+  const [cameraError, setCameraError] = useState<string | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+
+  useEffect(() => {
+    return () => {
+      streamRef.current?.getTracks().forEach((t) => t.stop());
+    };
+  }, []);
+
+  async function openCamera() {
+    setCameraError(null);
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setCameraError("الكاميرا غير مدعومة في هذا المتصفح — استخدم رفع الملفات.");
+      setCameraOpen(true);
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment" },
+        audio: false,
+      });
+      streamRef.current = stream;
+      setCameraOpen(true);
+      requestAnimationFrame(() => {
+        if (videoRef.current) videoRef.current.srcObject = stream;
+      });
+    } catch {
+      setCameraError("تعذّر الوصول إلى الكاميرا. تأكد من السماح بالوصول ثم حاول مجددًا.");
+      setCameraOpen(true);
+    }
+  }
+
+  function closeCamera() {
+    streamRef.current?.getTracks().forEach((t) => t.stop());
+    streamRef.current = null;
+    setCameraOpen(false);
+    setCameraError(null);
+  }
+
+  function capturePhoto() {
+    const video = videoRef.current;
+    if (!video || !video.videoWidth) return;
+    const canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.drawImage(video, 0, 0);
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) return;
+        const file = new File([blob], `capture-${Date.now()}.jpg`, { type: "image/jpeg" });
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.92);
+        setImages((prev) => [...prev, { file, dataUrl }]);
+        closeCamera();
+        toast.success("تم التقاط الصورة");
+      },
+      "image/jpeg",
+      0.92,
+    );
+  }
 
   const { data: books = [] } = useQuery({
     queryKey: ["books-with-authors"],
@@ -263,7 +327,16 @@ function AddBenefit() {
           <div>
             <label className="mb-2 block text-sm">صور صفحات الكتاب</label>
             <input type="file" accept="image/*" multiple onChange={(e) => pick(e.target.files)} className={inputClass} />
-            <p className="mt-2 text-xs text-muted-foreground">صور فقط، حتى ١٠ ميجابايت لكل صورة.</p>
+            <div className="mt-3 flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={openCamera}
+                className="rounded-full border border-border px-5 py-2.5 text-sm hover:bg-secondary"
+              >
+                📷 التقاط صورة بالكاميرا
+              </button>
+              <p className="text-xs text-muted-foreground">صور فقط، حتى ١٠ ميجابايت لكل صورة.</p>
+            </div>
             {images.length > 0 && (
               <div className="mt-4 flex flex-wrap gap-3">
                 {images.map((img, i) => (
@@ -421,6 +494,41 @@ function AddBenefit() {
             </button>
           </div>
         </section>
+      )}
+      {cameraOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/60 p-4" onClick={closeCamera}>
+          <div
+            className="w-full max-w-2xl rounded-3xl border border-border bg-card p-5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="font-display text-lg font-bold">التقاط صورة صفحة الكتاب</h2>
+              <button onClick={closeCamera} className="grid size-8 place-items-center rounded-full bg-muted text-sm">
+                ✕
+              </button>
+            </div>
+            {cameraError ? (
+              <p className="rounded-2xl border border-destructive/30 bg-destructive/8 p-4 text-sm text-destructive">
+                {cameraError}
+              </p>
+            ) : (
+              <>
+                <video ref={videoRef} autoPlay playsInline muted className="w-full rounded-2xl border border-border bg-muted" />
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <button
+                    onClick={capturePhoto}
+                    className="rounded-full bg-primary px-7 py-3 text-sm font-medium text-primary-foreground"
+                  >
+                    التقاط
+                  </button>
+                  <button onClick={closeCamera} className="rounded-full border border-border px-6 py-3 text-sm">
+                    إلغاء
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
       )}
     </AppShell>
   );
