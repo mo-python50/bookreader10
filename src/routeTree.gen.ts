@@ -10,33 +10,140 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AddRouteImport } from './routes/add'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as BenefitsRouteImport } from './routes/benefits'
+import { Route as ExportRouteImport } from './routes/export'
+import { Route as FlashcardsRouteImport } from './routes/flashcards'
+import { Route as LibraryRouteImport } from './routes/library'
+import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as BenefitsIdRouteImport } from './routes/benefits.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AddRoute = AddRouteImport.update({
+  id: '/add',
+  path: '/add',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BenefitsRoute = BenefitsRouteImport.update({
+  id: '/benefits',
+  path: '/benefits',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExportRoute = ExportRouteImport.update({
+  id: '/export',
+  path: '/export',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FlashcardsRoute = FlashcardsRouteImport.update({
+  id: '/flashcards',
+  path: '/flashcards',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LibraryRoute = LibraryRouteImport.update({
+  id: '/library',
+  path: '/library',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BenefitsIdRoute = BenefitsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => BenefitsRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/add': typeof AddRoute
+  '/auth': typeof AuthRoute
+  '/benefits': typeof BenefitsRouteWithChildren
+  '/export': typeof ExportRoute
+  '/flashcards': typeof FlashcardsRoute
+  '/library': typeof LibraryRoute
+  '/settings': typeof SettingsRoute
+  '/benefits/$id': typeof BenefitsIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/add': typeof AddRoute
+  '/auth': typeof AuthRoute
+  '/benefits': typeof BenefitsRouteWithChildren
+  '/export': typeof ExportRoute
+  '/flashcards': typeof FlashcardsRoute
+  '/library': typeof LibraryRoute
+  '/settings': typeof SettingsRoute
+  '/benefits/$id': typeof BenefitsIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/add': typeof AddRoute
+  '/auth': typeof AuthRoute
+  '/benefits': typeof BenefitsRouteWithChildren
+  '/export': typeof ExportRoute
+  '/flashcards': typeof FlashcardsRoute
+  '/library': typeof LibraryRoute
+  '/settings': typeof SettingsRoute
+  '/benefits/$id': typeof BenefitsIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/add'
+    | '/auth'
+    | '/benefits'
+    | '/export'
+    | '/flashcards'
+    | '/library'
+    | '/settings'
+    | '/benefits/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/add'
+    | '/auth'
+    | '/benefits'
+    | '/export'
+    | '/flashcards'
+    | '/library'
+    | '/settings'
+    | '/benefits/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/add'
+    | '/auth'
+    | '/benefits'
+    | '/export'
+    | '/flashcards'
+    | '/library'
+    | '/settings'
+    | '/benefits/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AddRoute: typeof AddRoute
+  AuthRoute: typeof AuthRoute
+  BenefitsRoute: typeof BenefitsRouteWithChildren
+  ExportRoute: typeof ExportRoute
+  FlashcardsRoute: typeof FlashcardsRoute
+  LibraryRoute: typeof LibraryRoute
+  SettingsRoute: typeof SettingsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +155,86 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/add': {
+      id: '/add'
+      path: '/add'
+      fullPath: '/add'
+      preLoaderRoute: typeof AddRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/benefits': {
+      id: '/benefits'
+      path: '/benefits'
+      fullPath: '/benefits'
+      preLoaderRoute: typeof BenefitsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/export': {
+      id: '/export'
+      path: '/export'
+      fullPath: '/export'
+      preLoaderRoute: typeof ExportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/flashcards': {
+      id: '/flashcards'
+      path: '/flashcards'
+      fullPath: '/flashcards'
+      preLoaderRoute: typeof FlashcardsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/library': {
+      id: '/library'
+      path: '/library'
+      fullPath: '/library'
+      preLoaderRoute: typeof LibraryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/benefits/$id': {
+      id: '/benefits/$id'
+      path: '/$id'
+      fullPath: '/benefits/$id'
+      preLoaderRoute: typeof BenefitsIdRouteImport
+      parentRoute: typeof BenefitsRoute
+    }
   }
 }
 
+interface BenefitsRouteChildren {
+  BenefitsIdRoute: typeof BenefitsIdRoute
+}
+
+const BenefitsRouteChildren: BenefitsRouteChildren = {
+  BenefitsIdRoute: BenefitsIdRoute,
+}
+
+const BenefitsRouteWithChildren = BenefitsRoute._addFileChildren(
+  BenefitsRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AddRoute: AddRoute,
+  AuthRoute: AuthRoute,
+  BenefitsRoute: BenefitsRouteWithChildren,
+  ExportRoute: ExportRoute,
+  FlashcardsRoute: FlashcardsRoute,
+  LibraryRoute: LibraryRoute,
+  SettingsRoute: SettingsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
