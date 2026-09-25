@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AddRouteImport } from './routes/add'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as BenefitsRouteImport } from './routes/benefits'
+import { Route as LibraryRouteImport } from './routes/library'
 import { Route as BenefitsIdRouteImport } from './routes/benefits.$id'
 
 const IndexRoute = IndexRouteImport.update({
@@ -35,6 +36,11 @@ const BenefitsRoute = BenefitsRouteImport.update({
   path: '/benefits',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LibraryRoute = LibraryRouteImport.update({
+  id: '/library',
+  path: '/library',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BenefitsIdRoute = BenefitsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -46,6 +52,7 @@ export interface FileRoutesByFullPath {
   '/add': typeof AddRoute
   '/auth': typeof AuthRoute
   '/benefits': typeof BenefitsRouteWithChildren
+  '/library': typeof LibraryRoute
   '/benefits/$id': typeof BenefitsIdRoute
 }
 export interface FileRoutesByTo {
@@ -53,6 +60,7 @@ export interface FileRoutesByTo {
   '/add': typeof AddRoute
   '/auth': typeof AuthRoute
   '/benefits': typeof BenefitsRouteWithChildren
+  '/library': typeof LibraryRoute
   '/benefits/$id': typeof BenefitsIdRoute
 }
 export interface FileRoutesById {
@@ -61,14 +69,22 @@ export interface FileRoutesById {
   '/add': typeof AddRoute
   '/auth': typeof AuthRoute
   '/benefits': typeof BenefitsRouteWithChildren
+  '/library': typeof LibraryRoute
   '/benefits/$id': typeof BenefitsIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/add' | '/auth' | '/benefits' | '/benefits/$id'
+  fullPaths: '/' | '/add' | '/auth' | '/benefits' | '/library' | '/benefits/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/add' | '/auth' | '/benefits' | '/benefits/$id'
-  id: '__root__' | '/' | '/add' | '/auth' | '/benefits' | '/benefits/$id'
+  to: '/' | '/add' | '/auth' | '/benefits' | '/library' | '/benefits/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/add'
+    | '/auth'
+    | '/benefits'
+    | '/library'
+    | '/benefits/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -76,6 +92,7 @@ export interface RootRouteChildren {
   AddRoute: typeof AddRoute
   AuthRoute: typeof AuthRoute
   BenefitsRoute: typeof BenefitsRouteWithChildren
+  LibraryRoute: typeof LibraryRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -108,6 +125,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BenefitsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/library': {
+      id: '/library'
+      path: '/library'
+      fullPath: '/library'
+      preLoaderRoute: typeof LibraryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/benefits/$id': {
       id: '/benefits/$id'
       path: '/$id'
@@ -135,6 +159,7 @@ const rootRouteChildren: RootRouteChildren = {
   AddRoute: AddRoute,
   AuthRoute: AuthRoute,
   BenefitsRoute: BenefitsRouteWithChildren,
+  LibraryRoute: LibraryRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
