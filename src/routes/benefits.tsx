@@ -8,18 +8,28 @@ import { useAuth } from "@/hooks/useAuth";
 
 type Filter = "all" | "books" | "authors" | "tags" | "titles" | "text";
 
-type Search = { q?: string; filter?: Filter; book?: string; author?: string; tag?: string };
+type Search = {
+  q: string | undefined;
+  filter: Filter;
+  book: string | undefined;
+  author: string | undefined;
+  tag: string | undefined;
+};
+
+const FILTER_KEYS = ["all", "books", "authors", "tags", "titles", "text"] as const;
 
 export const Route = createFileRoute("/benefits")({
-  validateSearch: (search: Record<string, unknown>): Search => ({
-    q: typeof search.q === "string" ? search.q : undefined,
-    filter: (["all", "books", "authors", "tags", "titles", "text"] as const).includes(search.filter as Filter)
-      ? (search.filter as Filter)
-      : "all",
-    book: typeof search.book === "string" ? search.book : undefined,
-    author: typeof search.author === "string" ? search.author : undefined,
-    tag: typeof search.tag === "string" ? search.tag : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>): Search => {
+    const str = (key: string) => (typeof search[key] === "string" ? (search[key] as string) : undefined);
+    const filter = str("filter");
+    return {
+      q: str("q"),
+      filter: FILTER_KEYS.includes(filter as Filter) ? (filter as Filter) : "all",
+      book: str("book"),
+      author: str("author"),
+      tag: str("tag"),
+    };
+  },
   head: () => ({
     meta: [
       { title: "الفوائد — البحث في جعبتك" },
