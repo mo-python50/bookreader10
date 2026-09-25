@@ -183,6 +183,12 @@ function BenefitPage() {
       <article className="rounded-3xl border border-border bg-card p-7 sm:p-10">
         <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
           <span>{arabicDate(benefit.created_at)}</span>
+          <button
+            onClick={remove}
+            className="mr-auto rounded-full border border-destructive/40 px-4 py-1.5 text-destructive hover:bg-destructive/10"
+          >
+            🗑 حذف الفائدة
+          </button>
           {benefit.title_is_ai && (
             <span className="rounded-full bg-primary/12 px-3 py-1 text-primary">عنوان مقترح بالذكاء الاصطناعي</span>
           )}
