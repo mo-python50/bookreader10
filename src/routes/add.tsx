@@ -327,7 +327,16 @@ function AddBenefit() {
           <div>
             <label className="mb-2 block text-sm">صور صفحات الكتاب</label>
             <input type="file" accept="image/*" multiple onChange={(e) => pick(e.target.files)} className={inputClass} />
-            <p className="mt-2 text-xs text-muted-foreground">صور فقط، حتى ١٠ ميجابايت لكل صورة.</p>
+            <div className="mt-3 flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={openCamera}
+                className="rounded-full border border-border px-5 py-2.5 text-sm hover:bg-secondary"
+              >
+                📷 التقاط صورة بالكاميرا
+              </button>
+              <p className="text-xs text-muted-foreground">صور فقط، حتى ١٠ ميجابايت لكل صورة.</p>
+            </div>
             {images.length > 0 && (
               <div className="mt-4 flex flex-wrap gap-3">
                 {images.map((img, i) => (
