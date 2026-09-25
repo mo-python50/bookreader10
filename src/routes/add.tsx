@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
-import { analyzeBookPage } from "@/lib/ai.functions";
+import { analyzeBookPage, suggestForWrittenText } from "@/lib/ai.functions";
 import { useAuth } from "@/hooks/useAuth";
 
 export const Route = createFileRoute("/add")({
@@ -14,10 +14,10 @@ export const Route = createFileRoute("/add")({
       { title: "إضافة فائدة — جعبة الفوائد" },
       {
         name: "description",
-        content: "أضف فائدة جديدة: ارفع صورة صفحة الكتاب، استخرج نصها كما هو، راجع العنوان والموضوعات المقترحة ثم احفظ.",
+        content: "أضف فائدة جديدة: صوّر صفحة الكتاب لاستخراج نصها، أو اكتب النص يدويًا، ثم راجع العنوان والموضوعات المقترحة واحفظ.",
       },
       { property: "og:title", content: "إضافة فائدة — جعبة الفوائد" },
-      { property: "og:description", content: "من صورة صفحة الكتاب إلى فائدة محفوظة ومنظّمة في خطوات قليلة." },
+      { property: "og:description", content: "من صورة صفحة الكتاب أو من كتابة يدوية إلى فائدة محفوظة ومنظّمة في خطوات قليلة." },
     ],
   }),
   component: AddBenefit,
@@ -39,9 +39,11 @@ function AddBenefit() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const analyze = useServerFn(analyzeBookPage);
+  const suggest = useServerFn(suggestForWrittenText);
 
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [images, setImages] = useState<Picked[]>([]);
+  const [mode, setMode] = useState<"image" | "manual">("image");
   const [bookTitle, setBookTitle] = useState("");
   const [authorName, setAuthorName] = useState("");
   const [page, setPage] = useState("");
@@ -190,6 +192,36 @@ function AddBenefit() {
       if (worst === "low") toast.warning("جودة الاستخراج منخفضة — راجع النص يدويًا قبل الحفظ.");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "تعذّر استخراج النص.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function manualContinue() {
+    if (!text.trim()) {
+      toast.error("اكتب نص الفائدة أولًا.");
+      return;
+    }
+    setBusy(true);
+    try {
+      // اقتراحات الذكاء الاصطناعي اختيارية هنا: إن تعذّرت نُكمل دون اقتراحات.
+      try {
+        const result = await suggest({
+          data: { text: text.trim(), bookTitle: bookTitle || undefined, authorName: authorName || undefined },
+        });
+        if (!aiTitle && result.title) {
+          setTitle(result.title);
+          setAiTitle(result.title);
+        }
+        if (!tagsInput.trim() && result.tags.length) setTagsInput(result.tags.join("، "));
+        if (!question.trim() && result.flashcard_question) setQuestion(result.flashcard_question);
+        if (!answer.trim() && result.flashcard_answer) setAnswer(result.flashcard_answer);
+      } catch {
+        toast.info("لم تتوفر اقتراحات الذكاء الاصطناعي — يمكنك المتابعة والتعديل يدويًا.");
+      }
+      setConfidence(null);
+      setNote(null);
+      setStep(2);
     } finally {
       setBusy(false);
     }
