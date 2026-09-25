@@ -495,6 +495,41 @@ function AddBenefit() {
           </div>
         </section>
       )}
+      {cameraOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/60 p-4" onClick={closeCamera}>
+          <div
+            className="w-full max-w-2xl rounded-3xl border border-border bg-card p-5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="font-display text-lg font-bold">التقاط صورة صفحة الكتاب</h2>
+              <button onClick={closeCamera} className="grid size-8 place-items-center rounded-full bg-muted text-sm">
+                ✕
+              </button>
+            </div>
+            {cameraError ? (
+              <p className="rounded-2xl border border-destructive/30 bg-destructive/8 p-4 text-sm text-destructive">
+                {cameraError}
+              </p>
+            ) : (
+              <>
+                <video ref={videoRef} autoPlay playsInline muted className="w-full rounded-2xl border border-border bg-muted" />
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <button
+                    onClick={capturePhoto}
+                    className="rounded-full bg-primary px-7 py-3 text-sm font-medium text-primary-foreground"
+                  >
+                    التقاط
+                  </button>
+                  <button onClick={closeCamera} className="rounded-full border border-border px-6 py-3 text-sm">
+                    إلغاء
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </AppShell>
   );
 }
