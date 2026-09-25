@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
-import { analyzeBookPage } from "@/lib/ai.functions";
+import { analyzeBookPage, suggestForWrittenText } from "@/lib/ai.functions";
 import { useAuth } from "@/hooks/useAuth";
 
 export const Route = createFileRoute("/add")({
@@ -14,10 +14,10 @@ export const Route = createFileRoute("/add")({
       { title: "إضافة فائدة — جعبة الفوائد" },
       {
         name: "description",
-        content: "أضف فائدة جديدة: ارفع صورة صفحة الكتاب، استخرج نصها كما هو، راجع العنوان والموضوعات المقترحة ثم احفظ.",
+        content: "أضف فائدة جديدة: صوّر صفحة الكتاب لاستخراج نصها، أو اكتب النص يدويًا، ثم راجع العنوان والموضوعات المقترحة واحفظ.",
       },
       { property: "og:title", content: "إضافة فائدة — جعبة الفوائد" },
-      { property: "og:description", content: "من صورة صفحة الكتاب إلى فائدة محفوظة ومنظّمة في خطوات قليلة." },
+      { property: "og:description", content: "من صورة صفحة الكتاب أو من كتابة يدوية إلى فائدة محفوظة ومنظّمة في خطوات قليلة." },
     ],
   }),
   component: AddBenefit,
@@ -39,9 +39,11 @@ function AddBenefit() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const analyze = useServerFn(analyzeBookPage);
+  const suggest = useServerFn(suggestForWrittenText);
 
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [images, setImages] = useState<Picked[]>([]);
+  const [mode, setMode] = useState<"image" | "manual">("image");
   const [bookTitle, setBookTitle] = useState("");
   const [authorName, setAuthorName] = useState("");
   const [page, setPage] = useState("");
@@ -195,6 +197,36 @@ function AddBenefit() {
     }
   }
 
+  async function manualContinue() {
+    if (!text.trim()) {
+      toast.error("اكتب نص الفائدة أولًا.");
+      return;
+    }
+    setBusy(true);
+    try {
+      // اقتراحات الذكاء الاصطناعي اختيارية هنا: إن تعذّرت نُكمل دون اقتراحات.
+      try {
+        const result = await suggest({
+          data: { text: text.trim(), bookTitle: bookTitle || undefined, authorName: authorName || undefined },
+        });
+        if (!aiTitle && result.title) {
+          setTitle(result.title);
+          setAiTitle(result.title);
+        }
+        if (!tagsInput.trim() && result.tags.length) setTagsInput(result.tags.join("، "));
+        if (!question.trim() && result.flashcard_question) setQuestion(result.flashcard_question);
+        if (!answer.trim() && result.flashcard_answer) setAnswer(result.flashcard_answer);
+      } catch {
+        toast.info("لم تتوفر اقتراحات الذكاء الاصطناعي — يمكنك المتابعة والتعديل يدويًا.");
+      }
+      setConfidence(null);
+      setNote(null);
+      setStep(2);
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function save() {
     if (!text.trim() || !title.trim()) {
       toast.error("العنوان ونص الفائدة مطلوبان.");
@@ -308,11 +340,17 @@ function AddBenefit() {
     <AppShell>
       <h1 className="font-display text-3xl font-bold">إضافة فائدة</h1>
       <div className="mt-4 flex flex-wrap gap-2 text-xs">
-        {[
-          [1, "الصورة والمصدر"],
-          [2, "استخراج النص"],
-          [3, "المراجعة والحفظ"],
-        ].map(([n, label]) => (
+        {(mode === "image"
+          ? [
+              [1, "الصورة والمصدر"],
+              [2, "استخراج النص"],
+              [3, "المراجعة والحفظ"],
+            ]
+          : [
+              [1, "الكتابة والمصدر"],
+              [2, "المراجعة والحفظ"],
+            ]
+        ).map(([n, label]) => (
           <span
             key={n as number}
             className={`rounded-full px-4 py-1.5 ${step === n ? "bg-foreground text-background" : "bg-muted text-muted-foreground"}`}
@@ -325,18 +363,47 @@ function AddBenefit() {
       {step === 1 && (
         <section className="mt-7 space-y-6 rounded-3xl border border-border bg-card p-7">
           <div>
-            <label className="mb-2 block text-sm">صور صفحات الكتاب</label>
-            <input type="file" accept="image/*" multiple onChange={(e) => pick(e.target.files)} className={inputClass} />
-            <div className="mt-3 flex flex-wrap items-center gap-3">
+            <label className="mb-2 block text-sm">طريقة الإدخال</label>
+            <div className="flex flex-wrap gap-2">
               <button
                 type="button"
-                onClick={openCamera}
-                className="rounded-full border border-border px-5 py-2.5 text-sm hover:bg-secondary"
+                onClick={() => setMode("image")}
+                className={`rounded-full px-5 py-2.5 text-sm ${mode === "image" ? "bg-foreground text-background" : "border border-border hover:bg-secondary"}`}
               >
-                📷 التقاط صورة بالكاميرا
+                🖼 صورة صفحة الكتاب
               </button>
-              <p className="text-xs text-muted-foreground">صور فقط، حتى ١٠ ميجابايت لكل صورة.</p>
+              <button
+                type="button"
+                onClick={() => setMode("manual")}
+                className={`rounded-full px-5 py-2.5 text-sm ${mode === "manual" ? "bg-foreground text-background" : "border border-border hover:bg-secondary"}`}
+              >
+                ✍️ كتابة يدوية
+              </button>
             </div>
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm">
+              {mode === "image" ? "صور صفحات الكتاب" : "صورة للمصدر (اختيارية)"}
+            </label>
+            {mode === "image" && (
+              <input type="file" accept="image/*" multiple onChange={(e) => pick(e.target.files)} className={inputClass} />
+            )}
+            {mode === "manual" && (
+              <input type="file" accept="image/*" onChange={(e) => pick(e.target.files)} className={inputClass} />
+            )}
+            {mode === "image" && (
+              <div className="mt-3 flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  onClick={openCamera}
+                  className="rounded-full border border-border px-5 py-2.5 text-sm hover:bg-secondary"
+                >
+                  📷 التقاط صورة بالكاميرا
+                </button>
+                <p className="text-xs text-muted-foreground">صور فقط، حتى ١٠ ميجابايت لكل صورة.</p>
+              </div>
+            )}
             {images.length > 0 && (
               <div className="mt-4 flex flex-wrap gap-3">
                 {images.map((img, i) => (
@@ -353,6 +420,23 @@ function AddBenefit() {
               </div>
             )}
           </div>
+
+          {mode === "manual" && (
+            <div>
+              <label className="mb-2 block text-sm">نص الفائدة (اكتبه أو الصقه كما هو)</label>
+              <textarea
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                rows={10}
+                placeholder="اكتب أو الصق نص الفائدة هنا…"
+                className={`${inputClass} quote-text leading-loose`}
+              />
+              <p className="mt-2 text-xs text-muted-foreground">
+                يُحفظ النص كما كتبته دون أي تعديل، وسيُقترح عليك عنوان وموضوعات بالذكاء الاصطناعي في خطوة المراجعة
+                (يمكنك تعديلها).
+              </p>
+            </div>
+          )}
 
           <div className="grid gap-4 sm:grid-cols-3">
             <div>
@@ -394,11 +478,17 @@ function AddBenefit() {
           </div>
 
           <button
-            onClick={extract}
+            onClick={mode === "image" ? extract : manualContinue}
             disabled={busy}
             className="rounded-full bg-primary px-7 py-3 text-sm font-medium text-primary-foreground disabled:opacity-60"
           >
-            {busy ? "جارٍ استخراج النص…" : "استخراج النص"}
+            {busy
+              ? mode === "image"
+                ? "جارٍ استخراج النص…"
+                : "جارٍ التحضير…"
+              : mode === "image"
+                ? "استخراج النص"
+                : "المتابعة إلى المراجعة"}
           </button>
         </section>
       )}
@@ -414,8 +504,10 @@ function AddBenefit() {
 
           <div>
             <div className="mb-2 flex items-center justify-between">
-              <label className="text-sm">النص الأصلي المستخرج</label>
-              <span className="text-xs text-muted-foreground">لا يُعاد صياغته — عدّله فقط لتصحيح الاستخراج</span>
+              <label className="text-sm">{mode === "image" ? "النص الأصلي المستخرج" : "نص الفائدة"}</label>
+              <span className="text-xs text-muted-foreground">
+                {mode === "image" ? "لا يُعاد صياغته — عدّله فقط لتصحيح الاستخراج" : "كما كتبته — يمكنك تعديله قبل الحفظ"}
+              </span>
             </div>
             <textarea
               value={text}
@@ -487,7 +579,7 @@ function AddBenefit() {
               {busy ? "جارٍ الحفظ…" : "حفظ الفائدة"}
             </button>
             <button onClick={() => setStep(1)} className="rounded-full border border-border px-6 py-3 text-sm">
-              تعديل المصدر والصور
+              {mode === "image" ? "تعديل المصدر والصور" : "تعديل النص والمصدر"}
             </button>
             <button onClick={() => navigate({ to: "/" })} className="rounded-full px-6 py-3 text-sm text-muted-foreground">
               إلغاء
