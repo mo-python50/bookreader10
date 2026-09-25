@@ -9,11 +9,11 @@ import { useAuth } from "@/hooks/useAuth";
 type Filter = "all" | "books" | "authors" | "tags" | "titles" | "text";
 
 type Search = {
-  q: string | undefined;
-  filter: Filter;
-  book: string | undefined;
-  author: string | undefined;
-  tag: string | undefined;
+  q?: string | undefined;
+  filter?: Filter | undefined;
+  book?: string | undefined;
+  author?: string | undefined;
+  tag?: string | undefined;
 };
 
 const FILTER_KEYS = ["all", "books", "authors", "tags", "titles", "text"] as const;
