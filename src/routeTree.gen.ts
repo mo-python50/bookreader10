@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as BenefitsRouteImport } from './routes/benefits'
+import { Route as BenefitsIdRouteImport } from './routes/benefits.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -28,35 +29,43 @@ const BenefitsRoute = BenefitsRouteImport.update({
   path: '/benefits',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BenefitsIdRoute = BenefitsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => BenefitsRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/benefits': typeof BenefitsRoute
+  '/benefits': typeof BenefitsRouteWithChildren
+  '/benefits/$id': typeof BenefitsIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/benefits': typeof BenefitsRoute
+  '/benefits': typeof BenefitsRouteWithChildren
+  '/benefits/$id': typeof BenefitsIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/benefits': typeof BenefitsRoute
+  '/benefits': typeof BenefitsRouteWithChildren
+  '/benefits/$id': typeof BenefitsIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/benefits'
+  fullPaths: '/' | '/auth' | '/benefits' | '/benefits/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/benefits'
-  id: '__root__' | '/' | '/auth' | '/benefits'
+  to: '/' | '/auth' | '/benefits' | '/benefits/$id'
+  id: '__root__' | '/' | '/auth' | '/benefits' | '/benefits/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
-  BenefitsRoute: typeof BenefitsRoute
+  BenefitsRoute: typeof BenefitsRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -82,13 +91,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BenefitsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/benefits/$id': {
+      id: '/benefits/$id'
+      path: '/$id'
+      fullPath: '/benefits/$id'
+      preLoaderRoute: typeof BenefitsIdRouteImport
+      parentRoute: typeof BenefitsRoute
+    }
   }
 }
+
+interface BenefitsRouteChildren {
+  BenefitsIdRoute: typeof BenefitsIdRoute
+}
+
+const BenefitsRouteChildren: BenefitsRouteChildren = {
+  BenefitsIdRoute: BenefitsIdRoute,
+}
+
+const BenefitsRouteWithChildren = BenefitsRoute._addFileChildren(
+  BenefitsRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
-  BenefitsRoute: BenefitsRoute,
+  BenefitsRoute: BenefitsRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
