@@ -504,8 +504,10 @@ function AddBenefit() {
 
           <div>
             <div className="mb-2 flex items-center justify-between">
-              <label className="text-sm">النص الأصلي المستخرج</label>
-              <span className="text-xs text-muted-foreground">لا يُعاد صياغته — عدّله فقط لتصحيح الاستخراج</span>
+              <label className="text-sm">{mode === "image" ? "النص الأصلي المستخرج" : "نص الفائدة"}</label>
+              <span className="text-xs text-muted-foreground">
+                {mode === "image" ? "لا يُعاد صياغته — عدّله فقط لتصحيح الاستخراج" : "كما كتبته — يمكنك تعديله قبل الحفظ"}
+              </span>
             </div>
             <textarea
               value={text}
@@ -577,7 +579,7 @@ function AddBenefit() {
               {busy ? "جارٍ الحفظ…" : "حفظ الفائدة"}
             </button>
             <button onClick={() => setStep(1)} className="rounded-full border border-border px-6 py-3 text-sm">
-              تعديل المصدر والصور
+              {mode === "image" ? "تعديل المصدر والصور" : "تعديل النص والمصدر"}
             </button>
             <button onClick={() => navigate({ to: "/" })} className="rounded-full px-6 py-3 text-sm text-muted-foreground">
               إلغاء
