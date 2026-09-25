@@ -57,6 +57,70 @@ function AddBenefit() {
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState("");
 
+  const [cameraOpen, setCameraOpen] = useState(false);
+  const [cameraError, setCameraError] = useState<string | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+
+  useEffect(() => {
+    return () => {
+      streamRef.current?.getTracks().forEach((t) => t.stop());
+    };
+  }, []);
+
+  async function openCamera() {
+    setCameraError(null);
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setCameraError("الكاميرا غير مدعومة في هذا المتصفح — استخدم رفع الملفات.");
+      setCameraOpen(true);
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment" },
+        audio: false,
+      });
+      streamRef.current = stream;
+      setCameraOpen(true);
+      requestAnimationFrame(() => {
+        if (videoRef.current) videoRef.current.srcObject = stream;
+      });
+    } catch {
+      setCameraError("تعذّر الوصول إلى الكاميرا. تأكد من السماح بالوصول ثم حاول مجددًا.");
+      setCameraOpen(true);
+    }
+  }
+
+  function closeCamera() {
+    streamRef.current?.getTracks().forEach((t) => t.stop());
+    streamRef.current = null;
+    setCameraOpen(false);
+    setCameraError(null);
+  }
+
+  function capturePhoto() {
+    const video = videoRef.current;
+    if (!video || !video.videoWidth) return;
+    const canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.drawImage(video, 0, 0);
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) return;
+        const file = new File([blob], `capture-${Date.now()}.jpg`, { type: "image/jpeg" });
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.92);
+        setImages((prev) => [...prev, { file, dataUrl }]);
+        closeCamera();
+        toast.success("تم التقاط الصورة");
+      },
+      "image/jpeg",
+      0.92,
+    );
+  }
+
   const { data: books = [] } = useQuery({
     queryKey: ["books-with-authors"],
     enabled: !!user,
