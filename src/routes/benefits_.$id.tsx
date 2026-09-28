@@ -3,7 +3,9 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchFolders } from "@/lib/folders";
 import {
   arabicDate,
   benefitsToCsv,
@@ -36,10 +38,16 @@ function BenefitPage() {
   const qc = useQueryClient();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [folderId, setFolderId] = useState("");
 
   const { data: benefit, isLoading } = useQuery({
     queryKey: ["benefit", id],
     queryFn: () => fetchBenefit(id),
+    enabled: !!user,
+  });
+  const { data: folders = [] } = useQuery({
+    queryKey: ["folders"],
+    queryFn: fetchFolders,
     enabled: !!user,
   });
 
@@ -164,6 +172,28 @@ function BenefitPage() {
     toast.success("تمت إضافة بطاقة مراجعة. يمكنك تعديل وجهيها من صفحة البطاقات.");
   }
 
+  async function addToFolder() {
+    if (!folderId) {
+      toast.error("اختر مجلدًا أولًا.");
+      return;
+    }
+    const { error } = await supabase.from("folder_benefits").insert({
+      folder_id: folderId,
+      benefit_id: benefit!.id,
+      user_id: user!.id,
+    });
+    if (error) {
+      toast.error(error.code === "23505" ? "هذه الفائدة موجودة في المجلد بالفعل." : "تعذّرت إضافة الفائدة إلى المجلد.");
+      return;
+    }
+    await Promise.all([
+      qc.invalidateQueries({ queryKey: ["folders"] }),
+      qc.invalidateQueries({ queryKey: ["folder-benefits", folderId] }),
+    ]);
+    setFolderId("");
+    toast.success("أُضيفت الفائدة إلى المجلد");
+  }
+
   async function remove() {
     if (!confirm("حذف هذه الفائدة نهائيًا؟")) return;
     const { error } = await supabase.from("benefits").delete().eq("id", benefit!.id);
@@ -239,6 +269,25 @@ function BenefitPage() {
             <img src={imageUrl} alt="صورة صفحة الكتاب" className="max-h-[520px] rounded-2xl border border-border" />
           </div>
         )}
+
+        <div className="mt-8 border-t border-border pt-6">
+          <p className="mb-3 text-sm font-medium">إضافة إلى مجلد</p>
+          {folders.length > 0 ? (
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <select
+                value={folderId}
+                onChange={(event) => setFolderId(event.target.value)}
+                className="min-w-0 flex-1 rounded-xl border border-input bg-background px-4 py-2.5 text-sm outline-none focus:border-primary"
+              >
+                <option value="">اختر مجلدًا</option>
+                {folders.map((folder) => <option key={folder.id} value={folder.id}>{folder.name}</option>)}
+              </select>
+              <Button onClick={addToFolder} disabled={!folderId} className="rounded-xl">إضافة إلى المجلد</Button>
+            </div>
+          ) : (
+            <Link to="/folders" className="text-sm text-primary hover:underline">أنشئ مجلدك الأول</Link>
+          )}
+        </div>
 
         <div className="mt-9 flex flex-wrap gap-2 border-t border-border pt-7 text-sm">
           <button onClick={() => copy(benefit.text, "تم نسخ النص")} className="rounded-full bg-foreground px-5 py-2.5 text-background">
