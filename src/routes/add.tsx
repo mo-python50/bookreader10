@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
+import { ImageCropper, type CropResult } from "@/components/ImageCropper";
 import { supabase } from "@/integrations/supabase/client";
 import { analyzeBookPage, suggestForWrittenText } from "@/lib/ai.functions";
 import { useAuth } from "@/hooks/useAuth";
@@ -61,6 +62,7 @@ function AddBenefit() {
 
   const [cameraOpen, setCameraOpen] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
+  const [pendingCrop, setPendingCrop] = useState<{ dataUrl: string; replaceIndex: number | null } | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
@@ -109,18 +111,22 @@ function AddBenefit() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
     ctx.drawImage(video, 0, 0);
-    canvas.toBlob(
-      (blob) => {
-        if (!blob) return;
-        const file = new File([blob], `capture-${Date.now()}.jpg`, { type: "image/jpeg" });
-        const dataUrl = canvas.toDataURL("image/jpeg", 0.92);
-        setImages((prev) => [...prev, { file, dataUrl }]);
-        closeCamera();
-        toast.success("تم التقاط الصورة");
-      },
-      "image/jpeg",
-      0.92,
-    );
+    const dataUrl = canvas.toDataURL("image/jpeg", 0.92);
+    closeCamera();
+    // تُعرض الصورة الملتقطة للاقتصاص قبل إضافتها.
+    setPendingCrop({ dataUrl, replaceIndex: null });
+  }
+
+  function applyCrop(result: CropResult) {
+    const replaceIndex = pendingCrop?.replaceIndex ?? null;
+    setPendingCrop(null);
+    if (replaceIndex != null) {
+      setImages((prev) => prev.map((img, i) => (i === replaceIndex ? result : img)));
+      toast.success("تم تحديث الصورة بعد الاقتصاص");
+    } else {
+      setImages((prev) => [...prev, result]);
+      toast.success("تم التقاط الصورة");
+    }
   }
 
   const { data: books = [] } = useQuery({
@@ -410,8 +416,16 @@ function AddBenefit() {
                   <div key={i} className="relative">
                     <img src={img.dataUrl} alt="" className="h-32 w-24 rounded-xl border border-border object-cover" />
                     <button
+                      onClick={() => setPendingCrop({ dataUrl: img.dataUrl, replaceIndex: i })}
+                      title="اقتصاص الصورة"
+                      className="absolute -left-2 -top-2 grid size-6 place-items-center rounded-full border border-border bg-background text-xs"
+                    >
+                      ✂
+                    </button>
+                    <button
                       onClick={() => setImages((prev) => prev.filter((_, idx) => idx !== i))}
-                      className="absolute -left-2 -top-2 grid size-6 place-items-center rounded-full bg-foreground text-xs text-background"
+                      title="حذف الصورة"
+                      className="absolute -right-2 -top-2 grid size-6 place-items-center rounded-full bg-foreground text-xs text-background"
                     >
                       ✕
                     </button>
@@ -621,6 +635,9 @@ function AddBenefit() {
             )}
           </div>
         </div>
+      )}
+      {pendingCrop && (
+        <ImageCropper src={pendingCrop.dataUrl} onCancel={() => setPendingCrop(null)} onConfirm={applyCrop} />
       )}
     </AppShell>
   );
