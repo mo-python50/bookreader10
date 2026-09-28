@@ -636,6 +636,9 @@ function AddBenefit() {
           </div>
         </div>
       )}
+      {pendingCrop && (
+        <ImageCropper src={pendingCrop.dataUrl} onCancel={() => setPendingCrop(null)} onConfirm={applyCrop} />
+      )}
     </AppShell>
   );
 }
