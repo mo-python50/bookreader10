@@ -86,15 +86,24 @@ function FolderPage() {
   async function removeNote(noteId: string) {
     if (!confirm("حذف هذه الملاحظة؟")) return;
     const { error } = await supabase.from("folder_notes").delete().eq("id", noteId);
-    if (error) return toast.error("تعذّر حذف الملاحظة.");
+    if (error) {
+      toast.error("تعذّر حذف الملاحظة.");
+      return;
+    }
     if (editingNote === noteId) clearNoteForm();
     await refresh();
   }
 
   async function linkBenefit() {
-    if (!user || !selectedBenefit) return toast.error("اختر فائدة أولًا.");
+    if (!user || !selectedBenefit) {
+      toast.error("اختر فائدة أولًا.");
+      return;
+    }
     const { error } = await supabase.from("folder_benefits").insert({ folder_id: id, benefit_id: selectedBenefit, user_id: user.id });
-    if (error) return toast.error("تعذّرت إضافة الفائدة.");
+    if (error) {
+      toast.error("تعذّرت إضافة الفائدة.");
+      return;
+    }
     setSelectedBenefit("");
     await refresh();
     toast.success("أُضيفت الفائدة إلى المجلد");
@@ -102,15 +111,24 @@ function FolderPage() {
 
   async function unlinkBenefit(benefitId: string) {
     const { error } = await supabase.from("folder_benefits").delete().eq("folder_id", id).eq("benefit_id", benefitId);
-    if (error) return toast.error("تعذّرت إزالة الفائدة.");
+    if (error) {
+      toast.error("تعذّرت إزالة الفائدة.");
+      return;
+    }
     await refresh();
     toast.success("أُزيلت الفائدة من المجلد وبقيت في مكتبتك");
   }
 
   async function saveFolder() {
-    if (!folderName.trim()) return toast.error("اكتب اسم المجلد.");
+    if (!folderName.trim()) {
+      toast.error("اكتب اسم المجلد.");
+      return;
+    }
     const { error } = await supabase.from("folders").update({ name: folderName.trim(), description: folderDescription.trim() || null }).eq("id", id);
-    if (error) return toast.error(error.code === "23505" ? "لديك مجلد بهذا الاسم بالفعل." : "تعذّر تحديث المجلد.");
+    if (error) {
+      toast.error(error.code === "23505" ? "لديك مجلد بهذا الاسم بالفعل." : "تعذّر تحديث المجلد.");
+      return;
+    }
     setEditingFolder(false);
     await refresh();
     toast.success("تم تحديث المجلد");
@@ -119,7 +137,10 @@ function FolderPage() {
   async function removeFolder() {
     if (!confirm("حذف هذا المجلد وملاحظاته؟ ستبقى الفوائد الأصلية في مكتبتك.")) return;
     const { error } = await supabase.from("folders").delete().eq("id", id);
-    if (error) return toast.error("تعذّر حذف المجلد.");
+    if (error) {
+      toast.error("تعذّر حذف المجلد.");
+      return;
+    }
     await qc.invalidateQueries({ queryKey: ["folders"] });
     toast.success("تم حذف المجلد");
     navigate({ to: "/folders" });
