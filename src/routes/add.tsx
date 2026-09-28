@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
+import { ImageCropper, type CropResult } from "@/components/ImageCropper";
 import { supabase } from "@/integrations/supabase/client";
 import { analyzeBookPage, suggestForWrittenText } from "@/lib/ai.functions";
 import { useAuth } from "@/hooks/useAuth";
@@ -61,6 +62,7 @@ function AddBenefit() {
 
   const [cameraOpen, setCameraOpen] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
+  const [pendingCrop, setPendingCrop] = useState<{ dataUrl: string; replaceIndex: number | null } | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
