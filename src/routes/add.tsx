@@ -504,9 +504,9 @@ function AddBenefit() {
 
           <div>
             <div className="mb-2 flex items-center justify-between">
-              <label className="text-sm">{mode === "image" ? "النص الأصلي المستخرج" : "نص الفائدة"}</label>
+              <label className="text-sm">{mode === "image" ? "النص المستخرج والمنسّق" : "نص الفائدة"}</label>
               <span className="text-xs text-muted-foreground">
-                {mode === "image" ? "لا يُعاد صياغته — عدّله فقط لتصحيح الاستخراج" : "كما كتبته — يمكنك تعديله قبل الحفظ"}
+                {mode === "image" ? "نُسّقت فقراته دون إعادة صياغة — راجعه قبل الحفظ" : "كما كتبته — يمكنك تعديله قبل الحفظ"}
               </span>
             </div>
             <textarea

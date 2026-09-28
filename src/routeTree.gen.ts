@@ -15,9 +15,11 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as BenefitsRouteImport } from './routes/benefits'
 import { Route as ExportRouteImport } from './routes/export'
 import { Route as FlashcardsRouteImport } from './routes/flashcards'
+import { Route as FoldersRouteImport } from './routes/folders'
 import { Route as LibraryRouteImport } from './routes/library'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as BenefitsIdRouteImport } from './routes/benefits_.$id'
+import { Route as FoldersIdRouteImport } from './routes/folders_.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -49,6 +51,11 @@ const FlashcardsRoute = FlashcardsRouteImport.update({
   path: '/flashcards',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FoldersRoute = FoldersRouteImport.update({
+  id: '/folders',
+  path: '/folders',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LibraryRoute = LibraryRouteImport.update({
   id: '/library',
   path: '/library',
@@ -64,6 +71,11 @@ const BenefitsIdRoute = BenefitsIdRouteImport.update({
   path: '/benefits/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FoldersIdRoute = FoldersIdRouteImport.update({
+  id: '/folders_/$id',
+  path: '/folders/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -72,9 +84,11 @@ export interface FileRoutesByFullPath {
   '/benefits': typeof BenefitsRoute
   '/export': typeof ExportRoute
   '/flashcards': typeof FlashcardsRoute
+  '/folders': typeof FoldersRoute
   '/library': typeof LibraryRoute
   '/settings': typeof SettingsRoute
   '/benefits/$id': typeof BenefitsIdRoute
+  '/folders/$id': typeof FoldersIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -83,9 +97,11 @@ export interface FileRoutesByTo {
   '/benefits': typeof BenefitsRoute
   '/export': typeof ExportRoute
   '/flashcards': typeof FlashcardsRoute
+  '/folders': typeof FoldersRoute
   '/library': typeof LibraryRoute
   '/settings': typeof SettingsRoute
   '/benefits/$id': typeof BenefitsIdRoute
+  '/folders/$id': typeof FoldersIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -95,9 +111,11 @@ export interface FileRoutesById {
   '/benefits': typeof BenefitsRoute
   '/export': typeof ExportRoute
   '/flashcards': typeof FlashcardsRoute
+  '/folders': typeof FoldersRoute
   '/library': typeof LibraryRoute
   '/settings': typeof SettingsRoute
   '/benefits_/$id': typeof BenefitsIdRoute
+  '/folders_/$id': typeof FoldersIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -108,9 +126,11 @@ export interface FileRouteTypes {
     | '/benefits'
     | '/export'
     | '/flashcards'
+    | '/folders'
     | '/library'
     | '/settings'
     | '/benefits/$id'
+    | '/folders/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -119,9 +139,11 @@ export interface FileRouteTypes {
     | '/benefits'
     | '/export'
     | '/flashcards'
+    | '/folders'
     | '/library'
     | '/settings'
     | '/benefits/$id'
+    | '/folders/$id'
   id:
     | '__root__'
     | '/'
@@ -130,9 +152,11 @@ export interface FileRouteTypes {
     | '/benefits'
     | '/export'
     | '/flashcards'
+    | '/folders'
     | '/library'
     | '/settings'
     | '/benefits_/$id'
+    | '/folders_/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -142,9 +166,11 @@ export interface RootRouteChildren {
   BenefitsRoute: typeof BenefitsRoute
   ExportRoute: typeof ExportRoute
   FlashcardsRoute: typeof FlashcardsRoute
+  FoldersRoute: typeof FoldersRoute
   LibraryRoute: typeof LibraryRoute
   SettingsRoute: typeof SettingsRoute
   BenefitsIdRoute: typeof BenefitsIdRoute
+  FoldersIdRoute: typeof FoldersIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -191,6 +217,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FlashcardsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/folders': {
+      id: '/folders'
+      path: '/folders'
+      fullPath: '/folders'
+      preLoaderRoute: typeof FoldersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/library': {
       id: '/library'
       path: '/library'
@@ -212,6 +245,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BenefitsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/folders_/$id': {
+      id: '/folders_/$id'
+      path: '/folders/$id'
+      fullPath: '/folders/$id'
+      preLoaderRoute: typeof FoldersIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -222,9 +262,11 @@ const rootRouteChildren: RootRouteChildren = {
   BenefitsRoute: BenefitsRoute,
   ExportRoute: ExportRoute,
   FlashcardsRoute: FlashcardsRoute,
+  FoldersRoute: FoldersRoute,
   LibraryRoute: LibraryRoute,
   SettingsRoute: SettingsRoute,
   BenefitsIdRoute: BenefitsIdRoute,
+  FoldersIdRoute: FoldersIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

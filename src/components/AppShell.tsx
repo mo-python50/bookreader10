@@ -6,6 +6,7 @@ const NAV = [
   { to: "/", label: "الرئيسية" },
   { to: "/benefits", label: "الفوائد" },
   { to: "/library", label: "مكتبتي" },
+  { to: "/folders", label: "المجلدات" },
   { to: "/flashcards", label: "البطاقات" },
   { to: "/export", label: "التصدير" },
   { to: "/settings", label: "الإعدادات" },
