@@ -141,6 +141,7 @@ function FolderPage() {
       toast.error("تعذّر حذف المجلد.");
       return;
     }
+    qc.setQueryData(["folders"], (current: Array<{ id: string }> | undefined) => current?.filter((item) => item.id !== id));
     await qc.invalidateQueries({ queryKey: ["folders"] });
     toast.success("تم حذف المجلد");
     navigate({ to: "/folders" });
